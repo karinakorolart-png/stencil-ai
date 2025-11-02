@@ -1,74 +1,122 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="et">
 <head>
-  <meta charset="UTF-8" />
-  <title>Stencil Generator</title>
+  <meta charset="UTF-8">
+  <title>Stencil Generator 🎨</title>
   <style>
-    body { font-family: sans-serif; text-align: center; margin: 40px; }
-    img { max-width: 90%; margin: 10px 0; border-radius: 8px; }
-    .slider { width: 300px; }
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      margin: 40px;
+      background-color: #fafafa;
+    }
+    h1 {
+      color: #222;
+    }
+    #controls {
+      margin-top: 20px;
+      display: none;
+    }
+    .slider {
+      width: 300px;
+    }
+    #preview {
+      display: flex;
+      justify-content: center;
+      margin-top: 20px;
+      gap: 20px;
+    }
+    #preview img {
+      width: 300px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+    }
+    #downloadBtn {
+      display: none;
+      margin-top: 20px;
+      padding: 10px 20px;
+      background: #333;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    #downloadBtn:hover {
+      background: #555;
+    }
   </style>
 </head>
 <body>
   <h1>Stencil Generator 🎨</h1>
-
+  
   <form id="uploadForm">
-    <input type="file" name="image" accept="image/*" required /><br><br>
+    <input type="file" name="image" accept="image/*" required>
     <button type="submit">Laadi pilt üles</button>
   </form>
 
-  <div id="controls" style="display:none;">
+  <div id="controls">
     <h3>Reguleeri tulemust:</h3>
-    Joone paksus <input class="slider" type="range" id="lineThickness" min="0" max="5" step="0.1" value="1"><br>
-    Tumendus <input class="slider" type="range" id="darkness" min="0" max="2" step="0.1" value="1"><br><br>
+    <p>Joone paksus: <input id="lineThickness" class="slider" type="range" min="1" max="5" step="0.5" value="2"></p>
+    <p>Tumendus: <input id="darkness" class="slider" type="range" min="0" max="2" step="0.1" value="1"></p>
     <button id="applyChanges">Uuenda pilt</button>
   </div>
 
-  <div id="preview" style="display:none;">
-    <h3>Enne / Pärast</h3>
-    <div style="display:flex; justify-content:center; gap:10px;">
-      <img id="before" alt="Original">
-      <img id="after" alt="Stencil">
+  <div id="preview">
+    <div>
+      <h4>Algne</h4>
+      <img id="before" src="">
+    </div>
+    <div>
+      <h4>Stencil</h4>
+      <img id="after" src="">
     </div>
   </div>
 
+  <button id="downloadBtn">Laadi stencil alla</button>
+
   <script>
-    const form = document.getElementById("uploadForm");
-    const controls = document.getElementById("controls");
-    const preview = document.getElementById("preview");
-    const before = document.getElementById("before");
-    const after = document.getElementById("after");
+    const form = document.getElementById('uploadForm');
+    const controls = document.getElementById('controls');
+    const before = document.getElementById('before');
+    const after = document.getElementById('after');
+    const applyBtn = document.getElementById('applyChanges');
+    const downloadBtn = document.getElementById('downloadBtn');
 
-    let uploadedImage;
+    let uploadedFile;
 
-    form.onsubmit = async (e) => {
+    form.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const file = e.target.image.files[0];
-      uploadedImage = file;
-      before.src = URL.createObjectURL(file);
-      controls.style.display = "block";
-      preview.style.display = "block";
-      await updateImage();
-    };
+      const fileInput = form.querySelector('input[type=file]');
+      if (!fileInput.files.length) return;
+      uploadedFile = fileInput.files[0];
+      before.src = URL.createObjectURL(uploadedFile);
+      controls.style.display = 'block';
+    });
 
-    document.getElementById("applyChanges").onclick = async () => {
-      await updateImage();
-    };
+    applyBtn.addEventListener('click', async () => {
+      if (!uploadedFile) return;
 
-    async function updateImage() {
+      const lineThickness = document.getElementById('lineThickness').value;
+      const darkness = document.getElementById('darkness').value;
+
       const formData = new FormData();
-      formData.append("image", uploadedImage);
-      formData.append("lineThickness", document.getElementById("lineThickness").value);
-      formData.append("darkness", document.getElementById("darkness").value);
+      formData.append('image', uploadedFile);
+      formData.append('lineThickness', lineThickness);
+      formData.append('darkness', darkness);
 
-      const res = await fetch("/stencil", {
-        method: "POST",
-        body: formData
-      });
-
+      const res = await fetch('/stencil', { method: 'POST', body: formData });
       const blob = await res.blob();
-      after.src = URL.createObjectURL(blob);
-    }
+      const url = URL.createObjectURL(blob);
+      after.src = url;
+      downloadBtn.style.display = 'inline-block';
+
+      downloadBtn.onclick = () => {
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'stencil.png';
+        a.click();
+      };
+    });
   </script>
 </body>
 </html>
