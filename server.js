@@ -1,20 +1,23 @@
-import express from "express";
-import cors from "cors";
-import fileUpload from "express-fileupload";
-import path from "path";
+// ✅ CommonJS versioon (Renderis täielikult töötav)
+
+const express = require("express");
+const fileUpload = require("express-fileupload");
+const cors = require("cors");
+const path = require("path");
 
 const app = express();
-const __dirname = path.resolve();
 
+// Lubame vajalikud middlewares
 app.use(cors());
 app.use(fileUpload());
-app.use(express.static("public"));
+app.use(express.static(path.join(__dirname, "public")));
 app.use(express.json());
 
-// Serveeri avaleht
+// 🟢 Pealehe teenindamine (index.html fail public kaustas)
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
+// 🟣 Serveri käivitamine
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
