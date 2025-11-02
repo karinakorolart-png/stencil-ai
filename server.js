@@ -1,12 +1,13 @@
 const express = require("express");
 const fileUpload = require("express-fileupload");
-const Jimp = require("jimp");
 const cors = require("cors");
+const Jimp = require("jimp");
 
 const app = express();
 app.use(cors());
 app.use(fileUpload());
 app.use(express.static("public"));
+app.use(express.json());
 
 app.post("/stencil", async (req, res) => {
   try {
@@ -15,13 +16,12 @@ app.post("/stencil", async (req, res) => {
     const darkness = parseFloat(req.body.darkness) || 1.0;
 
     const image = await Jimp.read(file.data);
-
-    // Töötleme pilti
     image
       .grayscale()
-      .contrast(darkness - 1) // reguleerib tumedust
+      .contrast(darkness - 1)
       .posterize(3)
-      .gaussian(lineThickness) // reguleerib joone paksust
+      .resize(800, Jimp.AUTO)
+      .gaussian(lineThickness)
       .edgeDetect();
 
     const buffer = await image.getBufferAsync(Jimp.MIME_PNG);
