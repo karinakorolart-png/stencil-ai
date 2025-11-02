@@ -1,35 +1,39 @@
-import express from "express";
-import cors from "cors";
-import multer from "multer";
-import sharp from "sharp";
-import fs from "fs";
+const express = require("express");
+const fileUpload = require("express-fileupload");
+const Jimp = require("jimp");
+const cors = require("cors");
 
 const app = express();
 app.use(cors());
-const upload = multer({ dest: "uploads/" });
+app.use(fileUpload());
+app.use(express.static("public"));
 
-// Lihtne "puhas joonistus" filter (mustad jooned valgel)
-app.post("/stencil", upload.single("image"), async (req, res) => {
+app.post("/stencil", async (req, res) => {
   try {
-    const input = req.file.path;
-    const output = `output-${Date.now()}.png`;
+    const file = req.files.image;
+    const lineThickness = parseFloat(req.body.lineThickness) || 1.0;
+    const darkness = parseFloat(req.body.darkness) || 1.0;
 
-    await sharp(input)
-      .greyscale()
-      .threshold(150) // must-valge kontrast
-      .toColourspace("b-w")
-      .toFile(output);
+    const image = await Jimp.read(file.data);
 
-    const img = fs.readFileSync(output);
+    // Töötleme pilti
+    image
+      .grayscale()
+      .contrast(darkness - 1) // reguleerib tumedust
+      .posterize(3)
+      .gaussian(lineThickness) // reguleerib joone paksust
+      .edgeDetect();
+
+    const buffer = await image.getBufferAsync(Jimp.MIME_PNG);
     res.set("Content-Type", "image/png");
-    res.send(img);
-
-    fs.unlinkSync(input);
-    fs.unlinkSync(output);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Stencil creation failed" });
+    res.send(buffer);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Stencil generation failed.");
   }
 });
 
-app.listen(10000, () => console.log("✅ Server running on port 10000"));
+const PORT = process.env.PORT || 10000;
+app.listen(PORT, () => {
+  console.log(`✅ Server running on port ${PORT}`);
+});
