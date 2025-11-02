@@ -2,121 +2,226 @@
 <html lang="et">
 <head>
   <meta charset="UTF-8">
-  <title>Stencil Generator 🎨</title>
+  <title>Stencil Generator ✨</title>
   <style>
     body {
       font-family: sans-serif;
       text-align: center;
       margin: 40px;
-      background-color: #fafafa;
+      background: #f5f5f5;
+      color: #333;
     }
+
     h1 {
-      color: #222;
+      margin-bottom: 20px;
     }
-    #controls {
-      margin-top: 20px;
-      display: none;
+
+    form {
+      margin-bottom: 20px;
     }
-    .slider {
-      width: 300px;
-    }
-    #preview {
-      display: flex;
-      justify-content: center;
-      margin-top: 20px;
-      gap: 20px;
-    }
-    #preview img {
-      width: 300px;
-      border: 1px solid #ddd;
+
+    input[type="file"] {
+      padding: 10px;
+      border: 1px solid #aaa;
+      background: white;
       border-radius: 5px;
     }
-    #downloadBtn {
-      display: none;
-      margin-top: 20px;
+
+    button {
+      margin-top: 10px;
       padding: 10px 20px;
-      background: #333;
-      color: white;
       border: none;
       border-radius: 5px;
+      background: #222;
+      color: white;
+      font-weight: bold;
       cursor: pointer;
     }
+
+    button:hover {
+      background: #444;
+    }
+
+    .slider {
+      width: 250px;
+    }
+
+    #controls {
+      display: none;
+      margin-bottom: 20px;
+    }
+
+    /* --- BEFORE/AFTER SLIDER --- */
+    .compare-container {
+      position: relative;
+      width: 90%;
+      max-width: 400px;
+      margin: 20px auto;
+      overflow: hidden;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      background: white;
+    }
+
+    .compare-container img {
+      width: 100%;
+      display: block;
+      user-select: none;
+      -webkit-user-drag: none;
+    }
+
+    .compare-after {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 50%;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    .compare-after img {
+      width: 200%;
+      height: auto;
+      transform: translateX(-0%);
+    }
+
+    .compare-handle {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      width: 4px;
+      height: 100%;
+      background: white;
+      cursor: ew-resize;
+      z-index: 10;
+      transform: translateX(-2px);
+    }
+
+    .handle-button {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: white;
+      border: 2px solid black;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      cursor: pointer;
+    }
+
+    #downloadBtn {
+      display: none;
+      margin-top: 15px;
+      background: #0078ff;
+    }
+
     #downloadBtn:hover {
-      background: #555;
+      background: #005fcc;
     }
   </style>
 </head>
 <body>
-  <h1>Stencil Generator 🎨</h1>
-  
+  <h1>Stencil Generator ✨</h1>
+
+  <!-- Upload -->
   <form id="uploadForm">
     <input type="file" name="image" accept="image/*" required>
     <button type="submit">Laadi pilt üles</button>
   </form>
 
+  <!-- Controls -->
   <div id="controls">
     <h3>Reguleeri tulemust:</h3>
-    <p>Joone paksus: <input id="lineThickness" class="slider" type="range" min="1" max="5" step="0.5" value="2"></p>
-    <p>Tumendus: <input id="darkness" class="slider" type="range" min="0" max="2" step="0.1" value="1"></p>
+    Joone paksus <input class="slider" type="range" id="lineThickness" min="0.5" max="3" step="0.1" value="1">
+    <br>
+    Tumedus <input class="slider" type="range" id="darkness" min="0.5" max="3" step="0.1" value="1">
+    <br>
     <button id="applyChanges">Uuenda pilt</button>
   </div>
 
-  <div id="preview">
-    <div>
-      <h4>Algne</h4>
-      <img id="before" src="">
+  <!-- Before / After Slider -->
+  <div class="compare-container" id="sliderBox" style="display:none;">
+    <img id="beforeImg" src="">
+    <div class="compare-after" id="afterWrapper">
+      <img id="afterImg" src="">
     </div>
-    <div>
-      <h4>Stencil</h4>
-      <img id="after" src="">
+    <div class="compare-handle" id="sliderHandle">
+      <div class="handle-button"></div>
     </div>
   </div>
 
-  <button id="downloadBtn">Laadi stencil alla</button>
+  <button id="downloadBtn">⬇️ Laadi stencil alla</button>
 
   <script>
-    const form = document.getElementById('uploadForm');
-    const controls = document.getElementById('controls');
-    const before = document.getElementById('before');
-    const after = document.getElementById('after');
-    const applyBtn = document.getElementById('applyChanges');
-    const downloadBtn = document.getElementById('downloadBtn');
+    const form = document.getElementById("uploadForm");
+    const controls = document.getElementById("controls");
+    const beforeImg = document.getElementById("beforeImg");
+    const afterImg = document.getElementById("afterImg");
+    const sliderBox = document.getElementById("sliderBox");
+    const downloadBtn = document.getElementById("downloadBtn");
 
     let uploadedFile;
 
-    form.addEventListener('submit', async (e) => {
+    form.onsubmit = async (e) => {
       e.preventDefault();
-      const fileInput = form.querySelector('input[type=file]');
-      if (!fileInput.files.length) return;
-      uploadedFile = fileInput.files[0];
-      before.src = URL.createObjectURL(uploadedFile);
-      controls.style.display = 'block';
-    });
+      const file = e.target.image.files[0];
+      if (!file) return;
 
-    applyBtn.addEventListener('click', async () => {
-      if (!uploadedFile) return;
+      uploadedFile = file;
+      beforeImg.src = URL.createObjectURL(file);
+      controls.style.display = "block";
 
-      const lineThickness = document.getElementById('lineThickness').value;
-      const darkness = document.getElementById('darkness').value;
+      await updateImage();
+    };
 
+    document.getElementById("applyChanges").onclick = async () => {
+      await updateImage();
+    };
+
+    async function updateImage() {
       const formData = new FormData();
-      formData.append('image', uploadedFile);
-      formData.append('lineThickness', lineThickness);
-      formData.append('darkness', darkness);
+      formData.append("image", uploadedFile);
+      formData.append("lineThickness", document.getElementById("lineThickness").value);
+      formData.append("darkness", document.getElementById("darkness").value);
 
-      const res = await fetch('/stencil', { method: 'POST', body: formData });
+      const res = await fetch("/stencil", { method: "POST", body: formData });
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
-      after.src = url;
-      downloadBtn.style.display = 'inline-block';
 
+      afterImg.src = url;
+      sliderBox.style.display = "block";
+      downloadBtn.style.display = "inline-block";
       downloadBtn.onclick = () => {
-        const a = document.createElement('a');
+        const a = document.createElement("a");
         a.href = url;
-        a.download = 'stencil.png';
+        a.download = "stencil.png";
         a.click();
       };
-    });
+    }
+
+    // --- SLIDER DRAG LOGIC ---
+    const afterWrapper = document.getElementById("afterWrapper");
+    const sliderHandle = document.getElementById("sliderHandle");
+    let dragging = false;
+
+    sliderHandle.addEventListener("mousedown", () => dragging = true);
+    sliderHandle.addEventListener("touchstart", () => dragging = true);
+    window.addEventListener("mouseup", () => dragging = false);
+    window.addEventListener("touchend", () => dragging = false);
+    window.addEventListener("mousemove", drag);
+    window.addEventListener("touchmove", drag);
+
+    function drag(e) {
+      if (!dragging) return;
+      let box = sliderBox.getBoundingClientRect();
+      let x = e.clientX || e.touches?.[0]?.clientX;
+      let pos = ((x - box.left) / box.width) * 100;
+      if (pos < 0) pos = 0;
+      if (pos > 100) pos = 100;
+      sliderHandle.style.left = pos + "%";
+      afterWrapper.style.width = pos + "%";
+    }
   </script>
 </body>
 </html>
