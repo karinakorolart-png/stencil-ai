@@ -27,6 +27,8 @@ app.post("/generate-stencil", async (req, res) => {
     const formData = new FormData();
     formData.append("image", image.data, image.name);
 
+    console.log("📤 Saadan pildi DeepAI API-le...");
+
     const response = await fetch("https://api.deepai.org/api/line-drawing", {
       method: "POST",
       headers: {
@@ -36,14 +38,17 @@ app.post("/generate-stencil", async (req, res) => {
     });
 
     const data = await response.json();
+    console.log("🔎 DeepAI vastus:", data);
 
     if (data.output_url) {
-      res.json({ output_url: data.output_url });
+      return res.json({ output_url: data.output_url });
     } else {
-      res.status(500).json({ error: "DeepAI ei tagastanud pilti", detail: data });
+      return res
+        .status(500)
+        .json({ error: "DeepAI ei tagastanud pilti", detail: data });
     }
   } catch (err) {
-    console.error("Serveri viga:", err);
+    console.error("❌ Serveri viga:", err);
     res.status(500).json({ error: "Serveri viga", detail: err.message });
   }
 });
