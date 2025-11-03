@@ -2,7 +2,6 @@ services:
   - type: web
     name: stencil-ai
     env: node
-    plan: free
     buildCommand: "npm install"
     startCommand: "node server.js"
-    autoDeploy: false
+    plan: free
