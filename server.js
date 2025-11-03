@@ -20,14 +20,14 @@ app.use(express.static(path.join(__dirname, "public")));
 app.post("/generate-stencil", async (req, res) => {
   try {
     if (!req.files || !req.files.image) {
-      return res.status(400).json({ error: "Pildifail puudub!" });
+      return res.status(400).json({ error: "Faili ei saadetud!" });
     }
 
     const image = req.files.image;
     const formData = new FormData();
     formData.append("image", image.data, image.name);
 
-    // 🔧 DeepAI päring
+    // Kasutame "sketch" mudelit (stabiilne versioon)
     const response = await fetch("https://api.deepai.org/api/sketch", {
       method: "POST",
       headers: {
@@ -36,22 +36,29 @@ app.post("/generate-stencil", async (req, res) => {
       body: formData,
     });
 
-    // ✅ LOGIME RAW vastuse, et näha täpselt, mida DeepAI tagastab
-    const rawResponse = await response.text();
-    console.log("🔍 DeepAI toore vastus:", rawResponse);
+    // Logime RAW vastuse (et näha täpset viga)
+    const text = await response.text();
+    console.log("🧾 DeepAI RAW vastus:", text);
 
-    // ❗ Kommentaar: JSON-i parsimine on hetkel välja kommenteeritud
-    // const data = await response.json();
+    // Proovime JSON-ina tõlgendada
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch {
+      return res.status(500).json({ error: "DeepAI vastus ei olnud JSON", raw: text });
+    }
 
-    // Kui soovid: saad vajadusel JSON tagasi anda testiks
-    return res.json({ raw: rawResponse });
+    if (data.output_url) {
+      return res.json({ output_url: data.output_url });
+    } else {
+      return res.status(500).json({ error: "DeepAI ei tagastanud pilti", details: data });
+    }
+
   } catch (err) {
     console.error("❌ Serveri viga:", err);
-    res.status(500).json({ error: "Serveri viga stencil genereerimisel." });
+    res.status(500).json({ error: "Serveri viga", details: err.message });
   }
 });
 
 const PORT = process.env.PORT || 10000;
-app.listen(PORT, () =>
-  console.log(`✅ Server töötab pordil ${PORT}`)
-);
+app.listen(PORT, () => console.log(`✅ Server töötab pordil ${PORT}`));
