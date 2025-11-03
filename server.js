@@ -20,15 +20,14 @@ app.use(express.static(path.join(__dirname, "public")));
 app.post("/generate-stencil", async (req, res) => {
   try {
     if (!req.files || !req.files.image) {
-      return res.status(400).json({ error: "Pilt puudub!" });
+      return res.status(400).json({ error: "Pildifail puudub!" });
     }
 
     const image = req.files.image;
     const formData = new FormData();
     formData.append("image", image.data, image.name);
 
-    console.log("📤 Saadan pildi DeepAI API-le...");
-
+    // 🔧 DeepAI päring
     const response = await fetch("https://api.deepai.org/api/line-drawing", {
       method: "POST",
       headers: {
@@ -37,29 +36,22 @@ app.post("/generate-stencil", async (req, res) => {
       body: formData,
     });
 
-    const text = await response.text(); // loeme toore vastuse tekstina
-    console.log("🔍 DeepAI toore vastus:", text); // logime selle täielikult
-    let data;
+    // ✅ LOGIME RAW vastuse, et näha täpselt, mida DeepAI tagastab
+    const rawResponse = await response.text();
+    console.log("🔍 DeepAI toore vastus:", rawResponse);
 
-    try {
-      data = JSON.parse(text); // proovime JSON-iks teisendada
-    } catch {
-      console.error("⚠️ DeepAI ei tagastanud korrektset JSON-i");
-      return res.status(500).json({ error: "DeepAI ei andnud JSON vastust", detail: text });
-    }
+    // ❗ Kommentaar: JSON-i parsimine on hetkel välja kommenteeritud
+    // const data = await response.json();
 
-    if (data.output_url) {
-      return res.json({ output_url: data.output_url });
-    } else {
-      return res
-        .status(500)
-        .json({ error: "DeepAI ei tagastanud pilti", detail: data });
-    }
+    // Kui soovid: saad vajadusel JSON tagasi anda testiks
+    return res.json({ raw: rawResponse });
   } catch (err) {
     console.error("❌ Serveri viga:", err);
-    res.status(500).json({ error: "Serveri viga", detail: err.message });
+    res.status(500).json({ error: "Serveri viga stencil genereerimisel." });
   }
 });
 
 const PORT = process.env.PORT || 10000;
-app.listen(PORT, () => console.log(`✅ Server töötab pordil ${PORT}`));
+app.listen(PORT, () =>
+  console.log(`✅ Server töötab pordil ${PORT}`)
+);
