@@ -28,7 +28,7 @@ app.post("/generate-stencil", async (req, res) => {
     formData.append("image", image.data, image.name);
 
     // 🔧 DeepAI päring
-    const response = await fetch("https://api.deepai.org/api/line-drawing", {
+    const response = await fetch("https://api.deepai.org/api/sketch", {
       method: "POST",
       headers: {
         "Api-Key": process.env.DEEPAI_KEY,
