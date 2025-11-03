@@ -2,6 +2,7 @@ import express from "express";
 import fileUpload from "express-fileupload";
 import cors from "cors";
 import fetch from "node-fetch";
+import FormData from "form-data";
 import path from "path";
 import { fileURLToPath } from "url";
 import dotenv from "dotenv";
@@ -35,13 +36,14 @@ app.post("/generate-stencil", async (req, res) => {
     });
 
     const data = await response.json();
+
     if (data.output_url) {
-      return res.json({ output_url: data.output_url });
+      res.json({ output_url: data.output_url });
     } else {
-      return res.status(500).json({ error: "DeepAI ei tagastanud pilti", detail: data });
+      res.status(500).json({ error: "DeepAI ei tagastanud pilti", detail: data });
     }
   } catch (err) {
-    console.error(err);
+    console.error("Serveri viga:", err);
     res.status(500).json({ error: "Serveri viga", detail: err.message });
   }
 });
