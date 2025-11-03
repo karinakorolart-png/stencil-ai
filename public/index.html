@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="et">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pildi võrdlus – enne ja pärast</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #111;
+      color: #eee;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+    }
+    h1 { margin-bottom: 20px; }
+    .slider-container {
+      position: relative;
+      width: 80%;
+      max-width: 600px;
+    }
+    .slider-container img {
+      width: 100%;
+      display: block;
+    }
+    .img-compare {
+      position: absolute;
+      top: 0;
+      left: 0;
+      overflow: hidden;
+      width: 50%;
+    }
+    input[type="range"] {
+      width: 100%;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Pildi liugur: enne / pärast</h1>
+  <div class="slider-container">
+    <img src="https://via.placeholder.com/600x400/888/fff?text=ENNE" alt="before">
+    <div class="img-compare">
+      <img src="https://via.placeholder.com/600x400/f35/fff?text=PÄRAST" alt="after">
+    </div>
+  </div>
+  <input type="range" min="0" max="100" value="50" id="slider">
+
+  <script>
+    const slider = document.getElementById('slider');
+    const overlay = document.querySelector('.img-compare');
+    slider.addEventListener('input', () => {
+      overlay.style.width = slider.value + '%';
+    });
+  </script>
+</body>
+</html>
