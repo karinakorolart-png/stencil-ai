@@ -37,8 +37,16 @@ app.post("/generate-stencil", async (req, res) => {
       body: formData,
     });
 
-    const data = await response.json();
-    console.log("🔎 DeepAI vastus:", data);
+    const text = await response.text(); // loeme toore vastuse tekstina
+    console.log("🔍 DeepAI toore vastus:", text); // logime selle täielikult
+    let data;
+
+    try {
+      data = JSON.parse(text); // proovime JSON-iks teisendada
+    } catch {
+      console.error("⚠️ DeepAI ei tagastanud korrektset JSON-i");
+      return res.status(500).json({ error: "DeepAI ei andnud JSON vastust", detail: text });
+    }
 
     if (data.output_url) {
       return res.json({ output_url: data.output_url });
