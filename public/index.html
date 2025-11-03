@@ -3,57 +3,120 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Pildi võrdlus – enne ja pärast</title>
+  <title>Pildi võrdlus – enne / pärast</title>
   <style>
     body {
-      font-family: sans-serif;
-      background: #111;
-      color: #eee;
+      font-family: system-ui, sans-serif;
+      background-color: #0e0e0e;
+      color: white;
+      margin: 0;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       height: 100vh;
-      margin: 0;
+      overflow: hidden;
     }
-    h1 { margin-bottom: 20px; }
-    .slider-container {
+
+    h1 {
+      margin-bottom: 30px;
+      font-weight: 500;
+    }
+
+    .compare-container {
       position: relative;
       width: 80%;
-      max-width: 600px;
+      max-width: 700px;
+      aspect-ratio: 4 / 3;
+      overflow: hidden;
+      border-radius: 10px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.6);
     }
-    .slider-container img {
+
+    .compare-container img {
       width: 100%;
+      height: 100%;
+      object-fit: cover;
       display: block;
+      user-select: none;
+      pointer-events: none;
     }
-    .img-compare {
+
+    .overlay {
       position: absolute;
       top: 0;
       left: 0;
-      overflow: hidden;
       width: 50%;
+      height: 100%;
+      overflow: hidden;
+      transition: width 0.05s linear;
     }
-    input[type="range"] {
+
+    .overlay img {
       width: 100%;
-      margin-top: 20px;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .slider-line {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 50%;
+      width: 2px;
+      background: white;
+      cursor: ew-resize;
+      z-index: 2;
+      transition: left 0.05s linear;
+    }
+
+    input[type="range"] {
+      position: absolute;
+      width: 100%;
+      bottom: -40px;
+      left: 0;
+      -webkit-appearance: none;
+      background: transparent;
+      cursor: ew-resize;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      height: 20px;
+      width: 20px;
+      border-radius: 50%;
+      background: white;
+      border: 2px solid #000;
+      margin-top: -8px;
+    }
+
+    input[type="range"]::-webkit-slider-runnable-track {
+      height: 4px;
+      background: #555;
+      border-radius: 2px;
     }
   </style>
 </head>
 <body>
-  <h1>Pildi liugur: enne / pärast</h1>
-  <div class="slider-container">
-    <img src="https://via.placeholder.com/600x400/888/fff?text=ENNE" alt="before">
-    <div class="img-compare">
-      <img src="https://via.placeholder.com/600x400/f35/fff?text=PÄRAST" alt="after">
+  <h1>Pildi võrdlus – enne / pärast</h1>
+  <div class="compare-container">
+    <img src="https://via.placeholder.com/700x500/666/fff?text=ENNE" alt="Before">
+    <div class="overlay" id="overlay">
+      <img src="https://via.placeholder.com/700x500/f35/fff?text=PÄRAST" alt="After">
     </div>
+    <div class="slider-line" id="sliderLine"></div>
+    <input type="range" id="slider" min="0" max="100" value="50">
   </div>
-  <input type="range" min="0" max="100" value="50" id="slider">
 
   <script>
     const slider = document.getElementById('slider');
-    const overlay = document.querySelector('.img-compare');
+    const overlay = document.getElementById('overlay');
+    const sliderLine = document.getElementById('sliderLine');
+
     slider.addEventListener('input', () => {
-      overlay.style.width = slider.value + '%';
+      const value = slider.value;
+      overlay.style.width = value + '%';
+      sliderLine.style.left = value + '%';
     });
   </script>
 </body>
