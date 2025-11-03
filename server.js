@@ -1,45 +1,50 @@
 import express from "express";
-import cors from "cors";
 import fileUpload from "express-fileupload";
+import cors from "cors";
 import fetch from "node-fetch";
-import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
+import dotenv from "dotenv";
+
+dotenv.config();
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 app.use(cors());
-app.use(express.json());
 app.use(fileUpload());
-app.use(express.static("public"));
+app.use(express.static(path.join(__dirname, "public")));
 
 app.post("/generate-stencil", async (req, res) => {
   try {
     if (!req.files || !req.files.image) {
-      return res.status(400).json({ error: "Pildi fail on puudu." });
+      return res.status(400).json({ error: "Pilt puudub!" });
     }
 
     const image = req.files.image;
-    const filePath = `/tmp/${image.name}`;
-    await image.mv(filePath);
-
     const formData = new FormData();
-    formData.append("image", fs.createReadStream(filePath));
+    formData.append("image", image.data, image.name);
 
-    const response = await fetch("https://api.deepai.org/api/stencil", {
+    const response = await fetch("https://api.deepai.org/api/line-drawing", {
       method: "POST",
-      headers: { "api-key": process.env.DEEPAI_API_KEY },
+      headers: {
+        "Api-Key": process.env.DEEPAI_KEY,
+      },
       body: formData,
     });
 
     const data = await response.json();
-    if (!data.output_url) {
-      return res.status(500).json({ error: "Stencil genereerimine ebaõnnestus." });
+    if (data.output_url) {
+      return res.json({ output_url: data.output_url });
+    } else {
+      return res.status(500).json({ error: "DeepAI ei tagastanud pilti", detail: data });
     }
-
-    res.json({ output_url: data.output_url });
   } catch (err) {
-    console.error("Viga genereerimisel:", err);
-    res.status(500).json({ error: "Serveri viga stencil genereerimisel." });
+    console.error(err);
+    res.status(500).json({ error: "Serveri viga", detail: err.message });
   }
 });
 
 const PORT = process.env.PORT || 10000;
-app.listen(PORT, () => console.log(`✅ Server töötab portil ${PORT}`));
+app.listen(PORT, () => console.log(`✅ Server töötab pordil ${PORT}`));
